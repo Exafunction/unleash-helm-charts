@@ -167,7 +167,7 @@ ingress:
   defaultBackend:
     enabled: false
     service:
-      name: defaultBackend
+      name: defaultbackend
       port: 80
 
 initContainers: []
