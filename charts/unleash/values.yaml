@@ -164,6 +164,11 @@ ingress:
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
+  defaultBackend:
+    enabled: false
+    service:
+      name: defaultbackend
+      port: 80
 
 initContainers: []
 
