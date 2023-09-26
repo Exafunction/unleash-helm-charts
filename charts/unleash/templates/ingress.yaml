@@ -57,7 +57,7 @@ spec:
               servicePort: {{ $svcPort }}
               {{- end }}
           {{- end }}
-          {{- if .Values.ingress.defaultBackend.enabled }}
+          {{- if $.Values.ingress.defaultBackend.enabled }}
           - path: /internal-backstage
             {{- if (semverCompare ">=1.18-0" $.Capabilities.KubeVersion.GitVersion) }}
             pathType: Prefix
@@ -65,12 +65,12 @@ spec:
             backend:
               {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
               service:
-                name: {{ .Values.ingress.defaultBackend.service.name }}
+                name: {{ $.Values.ingress.defaultBackend.service.name }}
                 port:
-                  number: {{ .Values.ingress.defaultBackend.service.port }}
+                  number: {{ $.Values.ingress.defaultBackend.service.port }}
               {{- else }}
-              serviceName: {{ .Values.ingress.defaultBackend.service.name }}
-              servicePort: {{ .Values.ingress.defaultBackend.service.port }}
+              serviceName: {{ $.Values.ingress.defaultBackend.service.name }}
+              servicePort: {{ $.Values.ingress.defaultBackend.service.port }}
               {{- end }}
           {{- end }}
     {{- end }}
