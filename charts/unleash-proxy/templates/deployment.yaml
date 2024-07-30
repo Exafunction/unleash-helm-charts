@@ -1,3 +1,4 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -19,6 +20,9 @@ spec:
       {{- end }}
       labels:
         {{- include "unleash-proxy.selectorLabels" . | nindent 8 }}
+        {{- if .Values.podLabels }}
+          {{ toYaml .Values.podLabels | nindent 8 }}
+        {{- end }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -28,7 +32,7 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: {{ .Chart.Name }}
+        - name: {{ include "unleash-proxy.name" . }}
           env:
             {{- if .Values.proxy.apiTokenSecret.enabled }}
             - name: UNLEASH_API_TOKEN
@@ -170,5 +174,15 @@ spec:
       {{- end }}
       {{- with .Values.tolerations }}
       tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints: 
+      {{- range . }}
+      - {{ toYaml . | nindent 8 | trim }}
+      {{- end }}
+      {{- end }}
+      {{- with .Values.hostAliases }}
+      hostAliases:
         {{- toYaml . | nindent 8 }}
       {{- end }}

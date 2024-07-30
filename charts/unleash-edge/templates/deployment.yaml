@@ -1,3 +1,4 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -19,6 +20,9 @@ spec:
       {{- end }}
       labels:
         {{- include "unleash-edge.selectorLabels" . | nindent 8 }}
+        {{-  range $key, $value := .Values.podLabels }}
+        {{ $key }}: {{ $value | quote }}
+        {{- end }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -28,7 +32,7 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: {{ .Chart.Name }}
+        - name: {{ include "unleash-edge.name" . }}
           args: ["edge"]
           env:
             - name: UPSTREAM_URL
@@ -39,6 +43,10 @@ spec:
            {{- end }}
            {{- if .Values.existingSecrets }}
              {{- toYaml .Values.existingSecrets | nindent 12 }}
+           {{- end }}
+           {{- if .Values.edge.logFormat }}
+            - name: LOG_FORMAT
+              value: "{{ .Values.edge.logFormat }}"
            {{- end }}
            {{- if .Values.env }}
             {{- toYaml .Values.env | nindent 12 }}
@@ -52,16 +60,50 @@ spec:
             - name: http
               containerPort: 3063
               protocol: TCP
+          {{- with .Values.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.livenessProbe }}
           livenessProbe:
+          {{- if .enabled | default false }}
             httpGet:
-              path: /internal-backstage/health
+              path: {{ .path | default "/internal-backstage/health" }}
               port: http
+            initialDelaySeconds: {{ .initialDelaySeconds | default 30 }}
+            timeoutSeconds: {{ .timeoutSeconds | default 10 }}
+          {{- else }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
           readinessProbe:
+          {{- if .enabled | default false }}
             httpGet:
-              path: /internal-backstage/health
+              path: {{ .path | default "/internal-backstage/health" }}
               port: http
+            initialDelaySeconds: {{ .initialDelaySeconds | default 30 }}
+            timeoutSeconds: {{ .timeoutSeconds | default 10 }}
+            successThreshold: {{ .successThreshold | default 5 }}
+            periodSeconds: {{ .periodSeconds | default 10 }}
+          {{- else }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          {{ with .Values.volumeMounts }}
+          volumeMounts:
+          {{- range . }}
+          - {{ toYaml . | nindent 12 | trim }}
+          {{- end }}
+          {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+      {{ with .Values.volumes }}
+      volumes:
+      {{- range . }}
+      - {{ toYaml . | nindent 8 | trim }}
+      {{- end }}
+      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -72,5 +114,15 @@ spec:
       {{- end }}
       {{- with .Values.tolerations }}
       tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints: 
+      {{- range . }}
+      - {{ toYaml . | nindent 8 | trim }}
+      {{- end }}
+      {{- end }}
+      {{- with .Values.hostAliases }}
+      hostAliases:
         {{- toYaml . | nindent 8 }}
       {{- end }}

@@ -25,6 +25,8 @@ serviceAccount:
 
 podAnnotations: {}
 
+podLabels: {}
+
 podSecurityContext: {}
   # fsGroup: 2000
 
@@ -98,6 +100,11 @@ tolerations: []
 
 affinity: {}
 
+topologySpreadConstraints: {}
+  # - maxSkew: 1
+  #   topologyKey: topology.kubernetes.io/zone
+  #   whenUnsatisfiable: DoNotSchedule
+
 # Adds environment variables
 env: []
 #  - name: LOG_LEVEL
@@ -134,3 +141,8 @@ proxy:
     enabled: false
     name: unleash-proxy-secret
     key: clientKeys
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable:
+  maxUnavailable: 1

@@ -25,91 +25,16 @@ affinity: {}
 #    password: unleash4all
 #
 # You can also add your own custom auth:
-# https://github.com/Unleash/unleash-examples/tree/main/v4
+# See https://github.com/Unleash/unleash-examples/tree/main/v4 for an example index.js configmap. Do be aware that since 6.0.0 of Unleash OSS, it no longer bundles passport libraries, so the v4 examples are no longer valid.
+# If you want SSO, you can use images from our community repos. There are prebuilt images for Google, Azure and OIDC.
+# Update your image.repository setting in your custom values.yaml file to use the image from the [community repo](https://github.com/Unleash/unleash-docker-community?tab=readme-ov-file#looking-for-sso-and-coming-from-httpsgithubcomunleashhelm-charts-), then configure the environment variables for the image as documented in the community repo.
 configMaps: {}
-#  index.js:
-#    mountPath: /unleash/index.js
-#    content: |-
-#      'use strict';
-#
-#      const passport = require('@passport-next/passport');
-#      const GoogleOAuth2Strategy = require('@passport-next/passport-google-oauth2').Strategy;
-#      const  { AuthenticationRequired } = require('unleash-server');
-#      const unleash = require('unleash-server');
-#
-#      function enableGoogleOauth(app, config, services) {
-#          const { baseUriPath } = config.server;
-#          const { userService } = services;
-#
-#          passport.use(
-#              new GoogleOAuth2Strategy(
-#                  {
-#                      clientID: process.env.GOOGLE_CLIENT_ID,
-#                      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-#                      callbackURL: process.env.GOOGLE_CALLBACK_URL,
-#                  },
-#
-#                  async (accessToken, refreshToken, profile, done) => {
-#                      const email  = profile.emails[0].value;
-#                      const user = await userService.loginUserWithoutPassword(email, true);
-#                      done(
-#                          null,
-#                          user
-#                      );
-#                  },
-#              ),
-#          );
-#
-#          app.use(passport.initialize());
-#          app.use(passport.session());
-#
-#          passport.serializeUser((user, done) => done(null, user));
-#          passport.deserializeUser((user, done) => done(null, user));
-#          app.get(
-#              '/api/admin/login',
-#              passport.authenticate('google', { scope: ['email'] }),
-#          );
-#
-#          app.get(
-#              '/api/auth/callback',
-#              passport.authenticate('google', {
-#                  failureRedirect: '/api/admin/error-login',
-#              }),
-#              (req, res) => {
-#                  res.redirect('/');
-#              },
-#          );
-#
-#          app.use('/api/admin/', (req, res, next) => {
-#              if (req.user) {
-#                  return next();
-#              }
-#
-#              return res
-#                  .status('401')
-#                  .json(
-#                      new AuthenticationRequired({
-#                          path: '/api/admin/login',
-#                          type: 'custom',
-#                          message: `You have to identify yourself in order to use Unleash.
-#                              Click the button and follow the instructions.`,
-#                      }),
-#                  )
-#                  .end();
-#          });
-#      }
-#
-#      unleash.start({
-#        authentication: {
-#          type: 'custom',
-#          customAuthHandler: enableGoogleOauth,
-#        },
-#      });
 
 containerPort: 4242
 
 dbConfig:
   # if postgres dependency chart is used, this needs to be the same value as postgresql.auth.database
+  # Will be used to set DATABASE_NAME as an environment variable.
   database: unleash
   # Defaults to 'public'
   schema: ""
@@ -123,7 +48,18 @@ dbConfig:
     key: ""
   # if postgres dependency chart is used, this needs to be the same value as postgresql.auth.username
   user: unleash
-  ssl: false
+  # ssl value must be a stringified JSON object https://docs.getunleash.io/reference/deploy/configuring-unleash#dbssl-vs-database_ssl-options
+  # ssl: { rejectUnauthorized: false }
+  # sslConfigFile can be a path to a json file containing the keys listed in https://docs.getunleash.io/reference/deploy/configuring-unleash#dbssl-vs-database_ssl-options
+  # sslConfigFile:
+  # sslCaFile should be a path to a CA file in pem format
+  # sslCaFile:
+  # sslCertFile should be a path to the cert file in pem format to use to connect to postgres
+  # sslCertFile:
+  # sslKeyFile should be a path to the key file in pem format to use to connect to postgres
+  # sslKeyFile:
+  # sslRejectUnauthorized can be set to true|false. Don't set this to false in production, it will void any security you get from using SSL to connect
+  # sslRejectUnauthorized
 
 env: []
 #  - name: GOOGLE_CLIENT_ID
@@ -133,7 +69,7 @@ env: []
 
 # adds environmentvars for existing secrets to the container via tpl function
 existingSecrets:
-  ""
+  []
   # - name: GOOGLE_CLIENT_SECRET
   #   valueFrom:
   #     secretKeyRef:
@@ -144,15 +80,26 @@ fullnameOverride: ""
 
 image:
   repository: unleashorg/unleash-server
-  tag:  # Obtained from .Chart.AppVersion, up to date tags available at https://hub.docker.com/r/unleashorg/unleash-server/tags
+  # Obtained from .Chart.AppVersion, up to date tags available at https://hub.docker.com/r/unleashorg/unleash-server/tags
+  tag:
   pullPolicy: Always
 
 imagePullSecrets: []
 
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
 ingress:
   enabled: false
   className: ""
-  annotations: {}
+  annotations:
+    {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
@@ -192,20 +139,19 @@ readinessProbe:
   periodSeconds: 10
   successThreshold: 5
 
-replicaCount: 1
+replicaCount: 2
 
 resources:
   {}
   # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # choice for the user. If you do want to specify resources, uncomment the following
   # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
+  #   cpu: 1000m
+  #   memory: 768Mi
   # requests:
   #   cpu: 100m
-  #   memory: 128Mi
+  #   memory: 384Mi
 
 # The key value pairs under secrets will be included in a Kubernetes Secret,
 # and they will generate environment variables that use `valueFrom` to refer to
@@ -218,6 +164,8 @@ service:
   # Supported types: ClusterIP, NodePort, LoadBalancer
   type: ClusterIP
   port: 4242
+  # target port will be set to port if not set
+  targetPort: ""
   # nodePort is optional and only used when service.type is NodePort or LoadBalancer
   nodePort: ""
   annotations: {}
@@ -257,3 +205,50 @@ autoscaling:
   maxReplicas: 0
   targetCPUUtilizationPercentage: 70
   targetMemoryUtilizationPercentage: 70
+
+extraObjects: []
+# - apiVersion: mumoshu.github.io/v1alpha1
+#   kind: AWSSecret
+#   metadata:
+#     name: unleash-secret
+#   spec:
+#     stringDataFrom:
+#       secretsManagerSecretRef:
+#         secretId: unleash-secret-production
+#         versionId: 00000000-1111-2222-3333-444444444444
+
+# CloudSQL in GKE
+cloudsql:
+  # If you enable cloudsql, ensure that serviceAccount.annotations is populated with associated GKE workload identity:
+  # e.g. iam.gke.io/gcp-service-account: airflow@gcp-project.iam.gserviceaccount.com
+  enabled: false
+  # Set CloudSQL instance: 'project:zone:instancename'
+  instance: ""
+  image:
+    repository: gcr.io/cloudsql-docker/gce-proxy
+    tag: 1.32.0
+    pullPolicy: IfNotPresent
+  resources:
+    {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 10m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 256Mi
+  # Additional flags to pass to cloudsql
+  flags: []
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable:
+  maxUnavailable: 1
+
+topologySpreadConstraints: {}
+  # - maxSkew: 1
+  #   topologyKey: topology.kubernetes.io/zone
+  #   whenUnsatisfiable: DoNotSchedule

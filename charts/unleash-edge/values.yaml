@@ -22,6 +22,8 @@ serviceAccount:
 
 podAnnotations: {}
 
+podLabels: {}
+
 podSecurityContext: {}
   # fsGroup: 2000
 
@@ -37,16 +39,23 @@ service:
   # Supported types: ClusterIP, NodePort, LoadBalancer
   type: ClusterIP
   port: 3063
+  # target port will be set to port if not set
+  targetPort: ""
   # nodePort is optional and only used when service.type is NodePort or LoadBalancer
   nodePort: ""
 
 resources:
-  requests:
-    cpu: 100m
-    memory: 64Mi
-  limits:
-    cpu: 200m
-    memory: 64Mi
+  {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # requests:
+  #   cpu: 100m
+  #   memory: 64Mi
+  # limits:
+  #   cpu: 200m
+  #   memory: 64Mi
 
 ingress:
   enabled: false
@@ -64,6 +73,39 @@ ingress:
   #    hosts:
   #
 
+startupProbe:
+  {}
+  # exec:
+  #   command: ["/unleash-edge", "ready"]
+  # initialDelaySeconds: 10
+  # timeoutSeconds: 10
+  # periodSeconds: 10
+  # successThreshold: 1
+  # failureThreshold: 10
+
+livenessProbe:
+  exec:
+    command: ["/unleash-edge", "health"]
+  # httpGet:
+  #   path: /internal-backstage/health
+  #   port: http
+  initialDelaySeconds: 10
+  timeoutSeconds: 10
+  periodSeconds: 10
+  successThreshold: 1
+  failureThreshold: 5
+
+readinessProbe:
+  exec:
+    command: ["/unleash-edge", "health"]
+  # httpGet:
+  #   path: /internal-backstage/health
+  #   port: http
+  initialDelaySeconds: 10
+  timeoutSeconds: 10
+  periodSeconds: 10
+  successThreshold: 1
+  failureThreshold: 1
 
 autoscaling:
   enabled: false
@@ -78,10 +120,45 @@ tolerations: []
 
 affinity: {}
 
+topologySpreadConstraints: {}
+  # - maxSkew: 1
+  #   topologyKey: topology.kubernetes.io/zone
+  #   whenUnsatisfiable: DoNotSchedule
+
 # Adds environment variables
 env: []
 #  - name: LOG_LEVEL
 #    value: info
+
+volumes: []
+# - name: secrets-store-inline
+#   mountPath: "/mnt/secrets-store"
+
+volumeMounts: []
+# - name: secrets-store-inline
+#   mountPath: "/mnt/secrets-store"
+#   readOnly: true
+
+extraObjects: []
+#  - apiVersion: secrets-store.csi.x-k8s.io/v1
+#    kind: SecretProviderClass
+#    metadata:
+#      name: unleash-edge-secret-provider
+#    spec:
+#      provider: aws
+#      parameters:
+#        objects: |
+#            - objectName: "unleash-token"
+#              objectType: "secretsmanager"
+#              jmesPath:
+#                - path: apiToken
+#                  objectAlias: apiToken
+#      secretObjects:
+#      - secretName: unleash-secret
+#        type: Opaque
+#        data:
+#        - objectName: apiToken
+#          key: apiToken
 
 # adds environmentvars for existing secrets to the container via tpl function
 existingSecrets:
@@ -95,3 +172,9 @@ existingSecrets:
 edge:
   upstreamUrl: "http://unleash.unleash:4242"
   logLevel: "warn"
+  logFormat: "json"
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable:
+  maxUnavailable: 1
