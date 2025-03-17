@@ -20,14 +20,18 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
+deploymentAnnotations: {}
+
 podAnnotations: {}
 
 podLabels: {}
 
-podSecurityContext: {}
+podSecurityContext:
+  {}
   # fsGroup: 2000
 
-securityContext: {}
+securityContext:
+  {}
   # capabilities:
   #   drop:
   #   - ALL
@@ -60,7 +64,8 @@ resources:
 ingress:
   enabled: false
   className: ""
-  annotations: {}
+  annotations:
+    {}
     # kubernetes.io/ingress.class: nginx
   # kubernetes.io/tls-acme: "true"
   hosts:
@@ -120,7 +125,8 @@ tolerations: []
 
 affinity: {}
 
-topologySpreadConstraints: {}
+topologySpreadConstraints:
+  {}
   # - maxSkew: 1
   #   topologyKey: topology.kubernetes.io/zone
   #   whenUnsatisfiable: DoNotSchedule
@@ -163,11 +169,7 @@ extraObjects: []
 # adds environmentvars for existing secrets to the container via tpl function
 existingSecrets:
   ""
-  # - name: TOKENS
-  #   valueFrom:
-  #     secretKeyRef:
-  #       name: secretname
-  #       key: secretkey
+  # Name of the secret containing key value pairs
 
 edge:
   upstreamUrl: "http://unleash.unleash:4242"
@@ -178,3 +180,5 @@ podDisruptionBudget:
   enabled: false
   minAvailable:
   maxUnavailable: 1
+
+priorityClassName: ""

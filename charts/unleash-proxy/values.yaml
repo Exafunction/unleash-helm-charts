@@ -23,14 +23,18 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
+deploymentAnnotations: {}
+
 podAnnotations: {}
 
 podLabels: {}
 
-podSecurityContext: {}
+podSecurityContext:
+  {}
   # fsGroup: 2000
 
-securityContext: {}
+securityContext:
+  {}
   # capabilities:
   #   drop:
   #   - ALL
@@ -62,7 +66,8 @@ service:
 ingress:
   enabled: false
   className: ""
-  annotations: {}
+  annotations:
+    {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
@@ -75,7 +80,8 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
-resources: {}
+resources:
+  {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -100,10 +106,17 @@ tolerations: []
 
 affinity: {}
 
-topologySpreadConstraints: {}
+topologySpreadConstraints:
+  {}
   # - maxSkew: 1
   #   topologyKey: topology.kubernetes.io/zone
   #   whenUnsatisfiable: DoNotSchedule
+
+dnsConfig:
+  {}
+  # options:
+  #   - name: ndots
+  #     value: "1"
 
 # Adds environment variables
 env: []
@@ -123,6 +136,8 @@ existingSecrets:
 # mountSecretName: secretName
 edge:
   enable: false
+  port: 3063
+  version: 19.6.0
 proxy:
   serverHost: http://unleash:4242/api
   apiToken: "default:development.unleash-insecure-api-token"
@@ -146,3 +161,7 @@ podDisruptionBudget:
   enabled: false
   minAvailable:
   maxUnavailable: 1
+
+# Add additional volumes and mounts, for example to read other secrets.
+volumes: []
+volumeMounts: []
