@@ -175,6 +175,8 @@ edge:
   upstreamUrl: "http://unleash.unleash:4242"
   logLevel: "warn"
   logFormat: "json"
+  # Additional arguments to pass to the edge binary
+  extraArgs: []
 
 podDisruptionBudget:
   enabled: false

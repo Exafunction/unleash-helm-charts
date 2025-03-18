@@ -37,7 +37,13 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: {{ include "unleash-edge.name" . }}
-          args: ["edge"]
+          args:
+            - edge
+            {{- if .Values.edge.extraArgs }}
+            {{- range .Values.edge.extraArgs }}
+            - {{ . | quote }}
+            {{- end }}
+            {{- end }}
           env:
             - name: UPSTREAM_URL
               value: "{{ .Values.edge.upstreamUrl }}"
