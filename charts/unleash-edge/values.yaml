@@ -77,6 +77,11 @@ ingress:
   #  - secretName: chart-example-tls
   #    hosts:
   #
+  defaultBackend:
+    enabled: false
+    service:
+      name: defaultbackend
+      port: 80
 
 startupProbe:
   {}
