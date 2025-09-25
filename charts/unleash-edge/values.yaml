@@ -6,7 +6,7 @@
 replicaCount: 1
 
 image:
-  repository: unleashorg/unleash-edge
+  repository: public.ecr.aws/unleashorg/unleash-edge
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion
   tag: ""
