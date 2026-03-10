@@ -150,6 +150,8 @@ livenessProbe:
   path: /health
   initialDelaySeconds: 30
   timeoutSeconds: 10
+  periodSeconds: 10
+  failureThreshold: 3
 
 nameOverride: ""
 
